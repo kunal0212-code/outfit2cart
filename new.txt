@@ -1,0 +1,69 @@
+
+"""Test script for Outfit2Cart Agent"""
+import asyncio
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import config
+from agent.outfit2cart_agent import Outfit2CartAgent
+
+
+async def test_agent():
+    """Run the agent with actual Android device"""
+    print("\n" + "="*70)
+    print(" OUTFIT2CART AGENT - ACTUAL DEVICE TEST")
+    print("="*70)
+    print("Provider: " + str(config.LLM_PROVIDER))
+    print("Model: " + str(config.LLM_MODEL))
+    print("Device ID: " + str(config.DEVICE_ID or 'auto-detect'))
+    print("WhatsApp Contact: " + str(config.WHATSAPP_TARGET_CONTACT))
+    print("Vision Enabled: " + str(config.VISION_ENABLED))
+    print("Reasoning Enabled: " + str(config.REASONING_ENABLED))
+    print("="*70)
+    
+    agent = Outfit2CartAgent()
+    
+    print("\n[1/2] Initializing agent...")
+    init_result = await agent.initialize()
+    
+    if not init_result:
+        print("Failed to initialize agent")
+        return
+    
+    print("Agent initialized successfully")
+    
+    print("\n[2/2] Running workflow...")
+    print("-" * 70)
+    
+    result = await agent.run_workflow()
+    
+    print("-" * 70)
+    
+    print("\nWORKFLOW RESULTS:")
+    print("   Status: " + str(result.get('status')))
+    print("   Message: " + str(result.get('message')))
+    if result.get('provider'):
+        print("   Provider Used: " + str(result.get('provider')))
+    if result.get('contact'):
+        print("   WhatsApp Contact: " + str(result.get('contact')))
+    
+    print("\n" + "="*70)
+    if result.get('success'):
+        print("WORKFLOW COMPLETED SUCCESSFULLY")
+    else:
+        error_msg = result.get('error', 'Unknown error')
+        print("WORKFLOW FAILED: " + str(error_msg))
+    print("="*70 + "\n")
+    
+    return result
+
+
+if __name__ == "__main__":
+    try:
+        result = asyncio.run(test_agent())
+        sys.exit(0 if result.get('success') else 1)
+    except KeyboardInterrupt:
+        print("\n\nTest interrupted by user")
+        sys.exit(1)
